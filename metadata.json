@@ -1,0 +1,6 @@
+{
+  "name": "Veo Battle Storyboard Generator",
+  "description": "Generate 6-scene cinematic battle storyboard prompts for Google Veo from battle data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
