@@ -3,33 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Swords, 
-  Zap, 
-  Cloud, 
-  MapPin, 
-  User, 
   Copy, 
   Check, 
-  Share2, 
   Terminal,
-  ChevronRight,
-  Info,
-  Clapperboard,
   Sparkles,
-  Flame,
-  Wand2
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { generateStoryboard, StoryboardResult, StoryboardScene } from './services/geminiService.ts';
 
 interface BattleData {
   fighter1: string;
   fighter2: string;
   arena: string;
   outcome: string;
-  f1CombatPattern: string;
-  f2CombatPattern: string;
   f1Weapon: string;
   f2Weapon: string;
   f1Ultimate: string;
@@ -40,25 +30,24 @@ interface BattleData {
 }
 
 const DEFAULT_DATA: BattleData = {
-  fighter1: 'Shadow Blade',
-  fighter2: 'Iron Vanguard',
-  arena: 'Neon Rooftops',
-  outcome: 'Shadow Blade strikes a decisive blow with a hidden twin blade.',
-  f1CombatPattern: 'Acrobatic and stealthy',
-  f2CombatPattern: 'Heavy and methodical',
-  f1Weapon: 'Twin Katanas',
-  f2Weapon: 'Greatshield and Mace',
-  f1Ultimate: 'Midnight Execution',
-  f2Ultimate: 'Shield Wall Crash',
-  lighting: 'High-contrast flickering neon',
-  weather: 'Driving rain and mist',
-  worldType: 'Cyberpunk Dystopia'
+  fighter1: '',
+  fighter2: '',
+  arena: '',
+  outcome: '',
+  f1Weapon: '',
+  f2Weapon: '',
+  f1Ultimate: '',
+  f2Ultimate: '',
+  lighting: '',
+  weather: '',
+  worldType: ''
 };
 
 export default function App() {
   const [data, setData] = useState<BattleData>(DEFAULT_DATA);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [isGenerated, setIsGenerated] = useState(false);
+  const [result, setResult] = useState<StoryboardResult | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -71,70 +60,47 @@ export default function App() {
 
     if (Object.keys(newData).length > 0) {
       setData(prev => ({ ...prev, ...newData }));
-      setIsGenerated(true);
     }
   }, []);
 
-  const scenes = useMemo(() => {
-    const { 
-      fighter1: f1, fighter2: f2, arena, outcome, 
-      f1CombatPattern: f1CP, f2CombatPattern: f2CP,
-      f1Weapon: f1W, f2Weapon: f2W,
-      lighting, weather, worldType
-    } = data;
+  const handleGenerate = async () => {
+    if (!data.fighter1 || !data.fighter2) {
+      alert("Harap isi setidaknya nama petarung!");
+      return;
+    }
+    setResult(null); // Clear previous results
+    setIsGenerating(true);
+    try {
+      const generated = await generateStoryboard(data);
+      setResult(generated);
+    } catch (error) {
+      console.error("Error generating storyboard:", error);
+      alert("Gagal membuat storyboard. Pastikan API Key sudah benar.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-    return [
-      {
-        title: "SCENE 01 / INTRO",
-        prompt: `Cinematic 8s video: Dramatic close-up of ${f1} showing intense expression, ${lighting} lighting highlighting their face and ${f1W}. Gripping weapon tightly, battle aura rising. ${weather} in the background. Sudden glitch transition to mirror-style cinematic close-up of ${f2}, showing their ${f2W} and ${f2CP} stance. High tension, high-detail textures, 4k cinematic style.`
-      },
-      {
-        title: "SCENE 02 / DIALOGUE",
-        prompt: `Cinematic 8s video: Medium wide shot in ${arena}. ${f1} and ${f2} standing 20 feet apart, facing each other. ${worldType} atmosphere. They exchange cold dialogue/taunts, camera slowly pushes in between them. Intense ${lighting}, atmospheric ${weather}. Focus on the emotional confrontation and the silence before the storm.`
-      },
-      {
-        title: "SCENE 03 / INITIATION",
-        prompt: `Cinematic 8s video: Action sequence. ${f1} initiates with ${f1CP} movement, rushing toward ${f2}. ${f2} reacts with ${f2CP} defense. The first violent clash of ${f1W} against ${f2W}. Impact produces sparks and energy ripples. Dynamic tracking camera, fast-paced choreography in the heart of ${arena}.`
-      },
-      {
-        title: "SCENE 04 / ADVANTAGE",
-        prompt: `Cinematic 8s video: Mid-battle. Both fighters exchange rapid strikes. ${f1} manages to find an opening, landing a significant hit. ${f2} is thrown backward into ${arena} environment features. Cinematic hit reaction, debris flying, ${lighting} flickering from the impact force. One fighter now has the clear advantage.`
-      },
-      {
-        title: "SCENE 05 / CLASH",
-        prompt: `Cinematic 8s video: Climax. ${f2} attempts a desperate last stand with ${data.f2Ultimate}, but ${f1} counters with their ultimate: ${data.f1Ultimate}. Explosive energy clash, dramatic slow-motion as the final decisive strike connects. ${outcome} The loser is critically overwhelmed. High-stakes cinematic resolution.`
-      },
-      {
-        title: "SCENE 06 / AFTERMATH",
-        prompt: `Cinematic 8s video: Victory and defeat. The battlefield in ${arena} is quiet. ${f2} is on the ground, defeated and in pain. ${f1} stands over them in a triumphant cinematic victory pose, ${f1W} glowing or dripping with energy. Emotional payoff, fading ${lighting}, character-focused exit shot. Cinematic ending.`
-      }
-    ];
-  }, [data]);
-
-  const combinedPrompt = useMemo(() => {
-    return `VEOCINEMATIC STORYBOARD: [${data.fighter1} vs ${data.fighter2}]\n\n` + 
-      scenes.map((s, i) => `[SCENE ${i+1} - 8s]: ${s.prompt}`).join('\n\n') +
-      `\n\nOVERALL STYLE: ${data.worldType}, ${data.lighting}, ${data.weather}.`;
-  }, [scenes, data]);
-
-  const copyToClipboard = (text: string, index: number) => {
+  const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0a0b] text-[#e2e8f0] font-['Helvetica_Neue',Arial,sans-serif] overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#0a0a0b] text-[#e2e8f0] font-sans overflow-hidden selection:bg-[#f59e0b] selection:text-black">
       {/* Header */}
-      <header className="bg-[#111114] border-b border-[#2d2d33] px-6 py-3 flex justify-between items-center z-10">
+      <header className="bg-[#111114] border-b border-[#2d2d33] px-6 py-3 flex justify-between items-center z-10 shrink-0">
         <div className="text-[#f59e0b] font-extrabold tracking-[1px] text-sm uppercase">
-          VEO STORYBOARD GEN // V1.0
+          VEO CINEMATIC STORYBOARD GEN // V2.0
         </div>
         <button 
-          onClick={() => setIsGenerated(true)}
-          className="bg-[#f59e0b] hover:bg-[#d97706] text-black font-bold text-[12px] px-4 py-2 rounded shadow transition-all active:scale-[0.98] uppercase tracking-[1px]"
+          disabled={isGenerating}
+          onClick={handleGenerate}
+          className="bg-[#f59e0b] hover:bg-[#d97706] disabled:opacity-50 text-black font-bold text-[12px] px-6 py-2 rounded shadow transition-all active:scale-[0.98] uppercase tracking-[1px] flex items-center gap-2"
         >
-          Regenerate Scenes
+          {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+          {isGenerating ? 'GENERATING...' : 'GENERATE STORYBOARD'}
         </button>
       </header>
 
@@ -207,74 +173,174 @@ export default function App() {
                 />
               </div>
           </div>
-
-          <div className="mt-8 bg-[#f59e0b] bg-opacity-[0.03] border border-[#f59e0b] border-opacity-10 p-4 rounded">
-            <p className="text-[10px] text-[#f59e0b] leading-relaxed m-0 opacity-70 italic">
-              SCENE LOGIC: All prompts are optimized for Google Veo cinematic 8s video generation.
-            </p>
-          </div>
         </aside>
 
-        {/* Main Bento Grid */}
-        <main className="flex-1 overflow-y-auto bg-[#0a0a0b] p-6 lg:p-8">
-          {!isGenerated ? (
+        {/* Main Billboard Grid */}
+        <main className="flex-1 overflow-y-auto bg-[#0a0a0b] p-6 lg:p-8 custom-scrollbar">
+          {!result && !isGenerating && (
             <div className="h-full flex flex-col items-center justify-center text-[#64748b] border-2 border-dashed border-[#2d2d33] rounded-lg">
               <Sparkles size={48} className="mb-4 opacity-20" />
               <p className="text-sm font-bold tracking-widest uppercase mb-4">Awaiting Signal</p>
               <button 
-                onClick={() => setIsGenerated(true)}
-                className="btn-primary px-8 py-3 bg-[#f59e0b] text-black font-bold rounded"
+                onClick={handleGenerate}
+                className="px-8 py-3 bg-[#f59e0b] hover:bg-[#d97706] text-black font-bold rounded uppercase tracking-wider transition-all"
               >
                 Ignite Generator
               </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {scenes.map((scene, idx) => (
-                <motion.div 
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-[#16161a] border border-[#2d2d33] rounded-lg p-4 flex flex-col min-h-[180px] group hover:border-[#f59e0b/30] transition-all"
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-[#f59e0b] text-[11px] font-bold tracking-wider">{scene.title}</span>
-                    <button 
-                      onClick={() => copyToClipboard(scene.prompt, idx)}
-                      className="text-[9px] text-[#64748b] border border-[#2d2d33] px-2 py-0.5 rounded hover:bg-[#2d2d33] hover:text-white transition-colors uppercase font-bold"
-                    >
-                      {copiedIndex === idx ? 'COPIED' : 'COPY'}
-                    </button>
-                  </div>
-                  <div className="bg-[#0a0a0b]/50 p-3 rounded border border-white/[0.02] flex-1">
-                    <p className="font-mono text-[11px] leading-relaxed text-[#cbd5e1] line-clamp-6 group-hover:text-white transition-colors">
-                      {scene.prompt}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+          )}
+
+          {isGenerating && (
+            <div className="h-full flex flex-col items-center justify-center space-y-6">
+              <div className="relative">
+                <Loader2 size={64} className="text-[#f59e0b] animate-spin" />
+                <Sparkles size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#f59e0b]" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-[#f59e0b] uppercase tracking-widest mb-2">Generating Cinematic Assets</h3>
+                <p className="text-sm text-[#64748b] italic">Analyzing combat patterns and narrative arcs...</p>
+              </div>
             </div>
+          )}
+
+          {result && !isGenerating && (
+            <AnimatePresence>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-8 max-w-7xl mx-auto"
+              >
+                {/* Character Arc Seeds */}
+                <div className="p-8 border border-[#f59e0b]/20 bg-[#16110a] rounded-xl relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f59e0b]" />
+                  <h3 className="text-[14px] font-black text-[#f59e0b] uppercase tracking-[2px] mb-6 flex items-center gap-2">
+                    <Terminal size={18} /> CHARACTER ARC SEEDS
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                    {result.arcSeeds.map((seed, idx) => (
+                      <div key={idx} className="flex gap-4">
+                        <span className="text-[#f59e0b] font-black text-sm">{idx + 1}.</span>
+                        <p className="text-[13px] text-[#cbd5e1] italic leading-relaxed">{seed}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Grid of Scenes */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  {result.scenes.map((scene, idx) => (
+                    <SceneCard 
+                      key={idx} 
+                      scene={scene} 
+                      idx={idx} 
+                      onCopy={copyToClipboard}
+                      isCopied={copiedKey === `scene-${idx}`}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </main>
       </div>
 
       {/* Footer Panel */}
-      <footer className="h-[150px] bg-[#111114] border-t border-[#2d2d33] p-4 flex flex-col shrink-0">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] font-bold">Final Combined Storyboard Prompt</span>
-          <button 
-            onClick={() => copyToClipboard(combinedPrompt, 99)}
-            className="bg-[#f59e0b] hover:bg-[#d97706] text-black font-bold text-[10px] px-3 py-1 rounded shadow uppercase transition-all"
-          >
-            {copiedIndex === 99 ? 'COPIED FULL SCRIPT' : 'Copy Full Prompt'}
-          </button>
-        </div>
-        <div className="flex-1 bg-[#0a0a0b] border border-[#334155] rounded p-3 font-mono text-[11px] text-[#f59e0b] overflow-y-auto whitespace-pre-wrap selection:bg-[#f59e0b] selection:text-black">
-          {combinedPrompt}
-        </div>
-      </footer>
+      {result && (
+        <footer className="h-[150px] bg-[#111114] border-t border-[#2d2d33] p-4 flex flex-col shrink-0">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] font-bold">Final Master Storyboard Prompt</span>
+            <button 
+              onClick={() => copyToClipboard(JSON.stringify(result, null, 2), 'full')}
+              className="bg-[#f59e0b] hover:bg-[#d97706] text-black font-bold text-[10px] px-4 py-1.5 rounded uppercase flex items-center gap-2 transition-all shadow"
+            >
+              {copiedKey === 'full' ? <Check size={14} /> : <Copy size={14} />}
+              {copiedKey === 'full' ? 'COPIED FULL SCRIPT' : 'Copy Full Prompt'}
+            </button>
+          </div>
+          <div className="flex-1 bg-[#0a0a0b] border border-[#334155] rounded p-3 font-mono text-[11px] text-[#f59e0b] overflow-y-auto whitespace-pre-wrap custom-scrollbar">
+            {JSON.stringify(result, null, 2)}
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
+
+function SceneCard({ 
+  scene, 
+  idx, 
+  onCopy, 
+  isCopied 
+}: { 
+  scene: StoryboardScene; 
+  idx: number; 
+  onCopy: (t: string, k: string) => void;
+  isCopied: boolean;
+}) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.1 }}
+      className="bg-[#111114] border border-[#2d2d33] rounded-xl overflow-hidden flex flex-col hover:border-[#f59e0b/30] transition-colors"
+    >
+      {/* Card Header */}
+      <div className="px-6 py-4 border-b border-[#2d2d33] flex justify-between items-center bg-[#16161a]">
+        <div className="flex items-center gap-3">
+          <span className="text-white font-black text-sm uppercase tracking-wider">{scene.title}</span>
+          <span className="text-[#64748b] text-[11px] font-mono">[{scene.timeRange}]</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => onCopy(JSON.stringify(scene, null, 2), `scene-${idx}`)}
+            className="flex items-center gap-1.5 text-[10px] text-[#64748b] hover:text-white border border-[#2d2d33] px-3 py-1 rounded transition-all uppercase font-bold"
+          >
+            {isCopied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+            {isCopied ? 'COPIED' : 'COPY'}
+          </button>
+          <span className="bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/30 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+            {scene.transition}
+          </span>
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-[80px_1fr] gap-4">
+          <span className="text-[10px] text-[#64748b] font-bold uppercase py-1">VISUAL</span>
+          <p className="text-[13px] text-[#cbd5e1] leading-relaxed">{scene.visual}</p>
+        </div>
+
+        <div className="grid grid-cols-[80px_1fr] gap-4">
+          <span className="text-[10px] text-[#64748b] font-bold uppercase py-1">CAMERA</span>
+          <p className="text-[13px] text-zinc-400">{scene.camera}</p>
+        </div>
+
+        <div className="grid grid-cols-[80px_1fr] gap-4">
+          <span className="text-[10px] text-[#64748b] font-bold uppercase py-1">MOTION</span>
+          <p className="text-[13px] text-zinc-400 italic">{scene.motion}</p>
+        </div>
+
+        {/* Narasi Block */}
+        <div className="bg-[#0a0a0b] p-4 rounded border border-white/5 relative group min-h-[80px] flex items-center">
+          <div className="absolute top-4 left-4 text-[10px] text-red-500 font-extrabold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded">NARASI</div>
+          <p className="text-[14px] md:text-[15px] text-[#f8fafc] font-medium pl-20 italic">"{scene.narration}"</p>
+        </div>
+
+        {/* Footer info */}
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#2d2d33]">
+          <div>
+            <span className="text-[10px] text-[#64748b] font-bold uppercase block mb-1">TONE</span>
+            <span className="text-[12px] text-zinc-300">{scene.tone}</span>
+          </div>
+          <div>
+            <span className="text-[10px] text-[#64748b] font-bold uppercase block mb-1">AUDIO</span>
+            <span className="text-[12px] text-zinc-300 italic">{scene.audio}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 
