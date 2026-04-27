@@ -15,9 +15,15 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { generateStoryboard, StoryboardResult, StoryboardScene } from './services/geminiService.ts';
 
+interface SceneDirective {
+  cameraAngle: string;
+  cameraMovement: string;
+  transition: string;
+}
+
 interface BattleData {
-  fighter1: string;
-  fighter2: string;
+  f1Name: string;
+  f2Name: string;
   arena: string;
   outcome: string;
   f1Weapon: string;
@@ -27,11 +33,12 @@ interface BattleData {
   lighting: string;
   weather: string;
   worldType: string;
+  sceneDirectives: SceneDirective[];
 }
 
 const DEFAULT_DATA: BattleData = {
-  fighter1: '',
-  fighter2: '',
+  f1Name: '',
+  f2Name: '',
   arena: '',
   outcome: '',
   f1Weapon: '',
@@ -40,8 +47,11 @@ const DEFAULT_DATA: BattleData = {
   f2Ultimate: '',
   lighting: '',
   weather: '',
-  worldType: ''
+  worldType: '',
+  sceneDirectives: Array(8).fill(null).map(() => ({ cameraAngle: '', cameraMovement: '', transition: '' }))
 };
+
+const TRANSITIONS = ["HARD CUT", "WHIP PAN", "GLITCH EFFECT", "ZOOM TRANSITION"];
 
 export default function App() {
   const [data, setData] = useState<BattleData>(DEFAULT_DATA);
@@ -58,14 +68,18 @@ export default function App() {
       if (val) newData[key] = val;
     });
 
+    // Backward compatibility for legacy keys
+    if (!newData.f1Name && params.get('fighter1')) newData.f1Name = params.get('fighter1')!;
+    if (!newData.f2Name && params.get('fighter2')) newData.f2Name = params.get('fighter2')!;
+
     if (Object.keys(newData).length > 0) {
       setData(prev => ({ ...prev, ...newData }));
     }
   }, []);
 
   const handleGenerate = async () => {
-    if (!data.fighter1 || !data.fighter2) {
-      alert("Harap isi setidaknya nama petarung!");
+    if (!data.f1Name || !data.f2Name) {
+      alert("Harap isi nama karakter!");
       return;
     }
     setResult(null); // Clear previous results
@@ -112,8 +126,8 @@ export default function App() {
           <div className="space-y-5 mb-8">
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Fighter 1', value: data.fighter1, key: 'fighter1' },
-                { label: 'Fighter 2', value: data.fighter2, key: 'fighter2' },
+                { label: 'Nama Karakter 1', value: data.f1Name, key: 'f1Name' },
+                { label: 'Nama Karakter 2', value: data.f2Name, key: 'f2Name' },
               ].map(item => (
                 <div key={item.label}>
                   <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">{item.label}</label>
@@ -162,7 +176,7 @@ export default function App() {
           </div>
 
           <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Combat Logic</span>
-          <div className="space-y-5">
+          <div className="space-y-5 mb-8">
              <div>
                 <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Battle Outcome</label>
                 <textarea 
@@ -172,6 +186,60 @@ export default function App() {
                   className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[11px] font-medium outline-none focus:border-[#f59e0b] focus:text-[#f59e0b] transition-all resize-none"
                 />
               </div>
+          </div>
+
+          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Director's Cut (Camera)</span>
+          <div className="space-y-4">
+            {data.sceneDirectives.map((directive, idx) => (
+              <div key={idx} className="p-3 bg-[#16161a] border border-[#2d2d33] rounded-lg">
+                <span className="text-[9px] text-[#f59e0b] font-black uppercase mb-2 block tracking-widest">SCENE {idx + 1}</span>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-[8px] text-[#64748b] uppercase block mb-1">Angle</label>
+                    <input 
+                      placeholder="e.g. Low Angle"
+                      value={directive.cameraAngle}
+                      onChange={e => {
+                        const newDirectives = [...data.sceneDirectives];
+                        newDirectives[idx].cameraAngle = e.target.value;
+                        setData({ ...data, sceneDirectives: newDirectives });
+                      }}
+                      className="w-full bg-[#0a0a0b] border border-[#2d2d33] rounded p-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#f59e0b] transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[8px] text-[#64748b] uppercase block mb-1">Movement</label>
+                    <input 
+                      placeholder="e.g. Slow Push-in"
+                      value={directive.cameraMovement}
+                      onChange={e => {
+                        const newDirectives = [...data.sceneDirectives];
+                        newDirectives[idx].cameraMovement = e.target.value;
+                        setData({ ...data, sceneDirectives: newDirectives });
+                      }}
+                      className="w-full bg-[#0a0a0b] border border-[#2d2d33] rounded p-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#f59e0b] transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[8px] text-[#64748b] uppercase block mb-1">Transition</label>
+                    <select 
+                      value={directive.transition}
+                      onChange={e => {
+                        const newDirectives = [...data.sceneDirectives];
+                        newDirectives[idx].transition = e.target.value;
+                        setData({ ...data, sceneDirectives: newDirectives });
+                      }}
+                      className="w-full bg-[#0a0a0b] border border-[#2d2d33] rounded p-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#f59e0b] transition-all"
+                    >
+                      <option value="">AI Decide</option>
+                      {TRANSITIONS.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </aside>
 
