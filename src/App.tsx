@@ -11,7 +11,10 @@ import {
   Sparkles,
   Wand2,
   Loader2,
-  Clapperboard
+  Clapperboard,
+  Music,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateStoryboard, StoryboardResult, StoryboardScene } from './services/geminiService.ts';
@@ -25,33 +28,279 @@ interface SceneDirective {
 }
 
 interface BattleData {
+  // Core
+  battleId: string;
   f1Name: string;
   f2Name: string;
   arena: string;
   outcome: string;
-  f1Weapon: string;
-  f2Weapon: string;
-  f1Ultimate: string;
-  f2Ultimate: string;
-  lighting: string;
-  weather: string;
-  worldType: string;
+  notes: string;
+  battleResult: string;
+
+  // F1 Profile
+  f1Alias: string;
+  f1Gender: string;
+  f1AgeRange: string;
+  f1Height: string;
+  f1BodyType: string;
+  f1FaceDetails: string;
+  f1EyeColor: string;
+  f1HairStyle: string;
+  f1OutfitDetails: string;
+  f1MaterialType: string;
+  f1PrimaryWeapon: string;
+  f1WeaponDetails: string;
+  f1SecondaryAbility: string;
+  f1AbilityVisual: string;
+  f1UltimateAbility: string;
+  f1UltimateVisual: string;
+  f1MovementStyle: string;
+  f1CombatPattern: string;
+  f1Weakness: string;
+  f1Personality: string;
+  f1EmotionTrigger: string;
+  f1DefaultExpression: string;
+  f1AttackExpression: string;
+  f1ArenaType: string;
+  f1ArenaDetails: string;
+  f1LightingSetup: string;
+  f1Weather: string;
+  f1WorldType: string;
+  f1ColorPalette: string;
+  f1Backstory: string;
+  f1SignatureQuote: string;
+  f1CombatRole: string;
+  f1AttackSpeed: string;
+  f1AttackPower: string;
+  f1DefenseLevel: string;
+  f1ComboLimit: string;
+  f1FightPacing: string;
+  f1CameraStyle: string;
+  f1SoundStyle: string;
+  f1ImpactStyle: string;
+  f1FinisherStyle: string;
+  f1SignatureMove1: string;
+  f1SignatureMove2: string;
+  f1CounterCharacter: string;
+  f1WeakAgainst: string;
+  powerF1: string;
+
+  // F2 Profile
+  f2Alias: string;
+  f2Gender: string;
+  f2AgeRange: string;
+  f2Height: string;
+  f2BodyType: string;
+  f2FaceDetails: string;
+  f2EyeColor: string;
+  f2HairStyle: string;
+  f2OutfitDetails: string;
+  f2MaterialType: string;
+  f2PrimaryWeapon: string;
+  f2WeaponDetails: string;
+  f2SecondaryAbility: string;
+  f2AbilityVisual: string;
+  f2UltimateAbility: string;
+  f2UltimateVisual: string;
+  f2MovementStyle: string;
+  f2CombatPattern: string;
+  f2Weakness: string;
+  f2Personality: string;
+  f2EmotionTrigger: string;
+  f2DefaultExpression: string;
+  f2AttackExpression: string;
+  f2ArenaType: string;
+  f2ArenaDetails: string;
+  f2LightingSetup: string;
+  f2Weather: string;
+  f2WorldType: string;
+  f2ColorPalette: string;
+  f2Backstory: string;
+  f2SignatureQuote: string;
+  f2CombatRole: string;
+  f2AttackSpeed: string;
+  f2AttackPower: string;
+  f2DefenseLevel: string;
+  f2ComboLimit: string;
+  f2FightPacing: string;
+  f2CameraStyle: string;
+  f2SoundStyle: string;
+  f2ImpactStyle: string;
+  f2FinisherStyle: string;
+  f2SignatureMove1: string;
+  f2SignatureMove2: string;
+  f2CounterCharacter: string;
+  f2WeakAgainst: string;
+  powerF2: string;
+
   sceneDirectives: SceneDirective[];
 }
 
+const DEFAULT_SCENE_DIRECTIVES: SceneDirective[] = [
+  { 
+    cameraAngle: 'Extreme Close-up', 
+    cameraMovement: 'Static focus on eyes', 
+    transition: 'HARD CUT', 
+    motion: 'Intense micro-expressions, facial muscle tension', 
+    description: 'Fokus tajam pada detail wajah dan emosi mendalam karakter pertama saat berbicara.' 
+  },
+  { 
+    cameraAngle: 'Mid Close-up', 
+    cameraMovement: 'Handheld subtle shake', 
+    transition: 'GLITCH EFFECT', 
+    motion: 'Cold resolve, steady breathing, subtle smirk', 
+    description: 'Menunjukkan respon dingin dan kesiapan mental karakter kedua melalui transisi glitch.' 
+  },
+  { 
+    cameraAngle: 'High-angle Canted Shot', 
+    cameraMovement: 'Slow Crane down', 
+    transition: 'WHIP PAN', 
+    motion: 'Wind blowing clothes and hair, characters locked in a gaze', 
+    description: 'Pemandangan luas arena pertarungan yang miring (canted) untuk menambah rasa tidak stabil dan tegang.' 
+  },
+  { 
+    cameraAngle: 'Low Angle Tracking', 
+    cameraMovement: 'Fast Dolly In', 
+    transition: 'HARD CUT', 
+    motion: 'Explosive dash towards center, sparks flying upon blade impact', 
+    description: 'Awal benturan pertama yang dahsyat, kamera mengikuti gerakan agresif ke arah lawan.' 
+  },
+  { 
+    cameraAngle: 'Dynamic Orbit Shot', 
+    cameraMovement: '360 degree rapid rotation', 
+    transition: 'WHIP PAN', 
+    motion: 'Complex parries, counters, and high-speed martial arts exchange', 
+    description: 'Urutan pertarungan koreografi tingkat tinggi yang menunjukkan kecepatan dan presisi kedua petarung.' 
+  },
+  { 
+    cameraAngle: 'Bird\'s Eye to Close-up', 
+    cameraMovement: 'Crash Zoom', 
+    transition: 'ZOOM TRANSITION', 
+    motion: 'Execution of ultimate move, massive energy shockwave release', 
+    description: 'Puncak pertarungan di mana teknik pamungkas digunakan, menciptakan efek visual yang menghancurkan sekitarnya.' 
+  },
+  { 
+    cameraAngle: 'Eye Level Close-up', 
+    cameraMovement: 'Slow Tracking Slider', 
+    transition: 'HARD CUT', 
+    motion: 'Kneeling in defeat, heavy breathing, environmental debris settling', 
+    description: 'Momen kekalahan yang menunjukkan kerapuhan fisik dan emosional karakter yang kalah.' 
+  },
+  { 
+    cameraAngle: 'Low Angle Hero Shot', 
+    cameraMovement: 'Slow Tilt Up followed by tracking away', 
+    transition: 'WHIP PAN', 
+    motion: 'Sheathing weapon with a click, walking away into the sunset', 
+    description: 'Pemenang berjalan meninggalkan medan laga, memberikan kesan kemenangan yang ikonik dan tenang.' 
+  }
+];
+
 const DEFAULT_DATA: BattleData = {
-  f1Name: '',
-  f2Name: '',
-  arena: '',
-  outcome: '',
-  f1Weapon: '',
-  f2Weapon: '',
-  f1Ultimate: '',
-  f2Ultimate: '',
-  lighting: '',
-  weather: '',
-  worldType: '',
-  sceneDirectives: Array(8).fill(null).map(() => ({ cameraAngle: '', cameraMovement: '', transition: '', motion: '', description: '' }))
+  battleId: 'CLASH-001',
+  f1Name: 'Kaelen Shadowstep',
+  f2Name: 'Vorgath the Iron Wall',
+  arena: 'Cyber-Dystopian Arena',
+  outcome: 'Kaelen outmaneuvers Vorgath after a grueling exchange, leaving him paralyzed by shadow blades.',
+  notes: 'High stakes match for the obsidian throne.',
+  battleResult: 'Fighter 1 Victory',
+
+  // F1
+  f1Alias: 'The Nightshade',
+  f1Gender: 'Male',
+  f1AgeRange: '20-25',
+  f1Height: '180cm',
+  f1BodyType: 'Athletic/Lean',
+  f1FaceDetails: 'Sharp jawline, scar over left eye',
+  f1EyeColor: 'Glowing Violet',
+  f1HairStyle: 'Short black undercut',
+  f1OutfitDetails: 'Stealth tactical weave with glowing accents',
+  f1MaterialType: 'Carbon-fiber mesh',
+  f1PrimaryWeapon: 'Shadow Twin Blades',
+  f1WeaponDetails: 'Retractable phase-shift swords',
+  f1SecondaryAbility: 'Shadow Jaunt',
+  f1AbilityVisual: 'Purple misty teleportation smoke',
+  f1UltimateAbility: 'Nightfall Execution',
+  f1UltimateVisual: 'Screen turns black with violet slashes',
+  f1MovementStyle: 'Acrobatic/Gliding',
+  f1CombatPattern: 'High speed pressure',
+  f1Weakness: 'Physical durability',
+  f1Personality: 'Stoic and calculating',
+  f1EmotionTrigger: 'Betrayal',
+  f1DefaultExpression: 'Neutral cold stare',
+  f1AttackExpression: 'Intense focus',
+  f1ArenaType: 'Cyber-Arena',
+  f1ArenaDetails: 'Neon lit floating platforms',
+  f1LightingSetup: 'High contrast neon blue and red',
+  f1Weather: 'Rain of static',
+  f1WorldType: 'Deep Future',
+  f1ColorPalette: 'Black, Purple, Cyan',
+  f1Backstory: 'Exiled prince of the shadow realm.',
+  f1SignatureQuote: 'Darkness is my only ally.',
+  f1CombatRole: 'Assassin',
+  f1AttackSpeed: 'Ex-Tier',
+  f1AttackPower: 'A-Tier',
+  f1DefenseLevel: 'C-Tier',
+  f1ComboLimit: 'Infinite focus',
+  f1FightPacing: 'Hyper-Fast',
+  f1CameraStyle: 'SnorriCam / Kinetic',
+  f1SoundStyle: 'Glitch-Hop / Bass Heavy',
+  f1ImpactStyle: 'Sharp / Precise',
+  f1FinisherStyle: 'Cinematic Slow-mo',
+  f1SignatureMove1: 'Void Step',
+  f1SignatureMove2: 'Eclipse Slice',
+  f1CounterCharacter: 'Brawlers',
+  f1WeakAgainst: 'Area Control mages',
+  powerF1: '9500',
+
+  // F2
+  f2Alias: 'The Bulwark',
+  f2Gender: 'Male',
+  f2AgeRange: '40-45',
+  f2Height: '210cm',
+  f2BodyType: 'Colossal/Heavy',
+  f2FaceDetails: 'Bearded, weathered skin',
+  f2EyeColor: 'Steel Grey',
+  f2HairStyle: 'Bald with runic tattoos',
+  f2OutfitDetails: 'Heavy basalt-infused power armor',
+  f2MaterialType: 'Enchanted heavy plate',
+  f2PrimaryWeapon: 'Gravity Shield',
+  f2WeaponDetails: 'Can shift its mass to crush or deflect',
+  f2SecondaryAbility: 'Kinetic Absorption',
+  f2AbilityVisual: 'Ripples in the air like heat distortion',
+  f2UltimateAbility: 'Cataclysmic Shockwave',
+  f2UltimateVisual: 'Ground shatters as he slams the shield',
+  f2MovementStyle: 'Stomping/Unstoppable',
+  f2CombatPattern: 'Reactive counter-striker',
+  f2Weakness: 'Slow mobility',
+  f2Personality: 'Honorable and unyielding',
+  f2EmotionTrigger: 'Injustice',
+  f2DefaultExpression: 'Grim determination',
+  f2AttackExpression: 'Primal roar',
+  f2ArenaType: 'Industrial Wasteland',
+  f2ArenaDetails: 'Rusted factory with molten metal',
+  f2LightingSetup: 'Amber warm lighting',
+  f2Weather: 'Ash fall',
+  f2WorldType: 'Dark Industrial',
+  f2ColorPalette: 'Iron, Rust, Amber',
+  f2Backstory: 'Last guardian of the foundry gates.',
+  f2SignatureQuote: 'I am the wall that never falls.',
+  f2CombatRole: 'Tank/Juggernaut',
+  f2AttackSpeed: 'D-Tier',
+  f2AttackPower: 'S-Tier',
+  f2DefenseLevel: 'SSS-Tier',
+  f2ComboLimit: 'Heavy single hits',
+  f2FightPacing: 'Slow/Impactful',
+  f2CameraStyle: 'Low angle grounded',
+  f2SoundStyle: 'Metallic clanging / Orchestral',
+  f2ImpactStyle: 'Heavy / Earth-shattering',
+  f2FinisherStyle: 'Brutal Crushing',
+  f2SignatureMove1: 'Mountain Slam',
+  f2SignatureMove2: 'Iron Fortress',
+  f2CounterCharacter: 'Glass Cannons',
+  f2WeakAgainst: 'Agile speedsters',
+  powerF2: '9200',
+
+  sceneDirectives: DEFAULT_SCENE_DIRECTIVES
 };
 
 const TRANSITIONS = ["HARD CUT", "WHIP PAN", "GLITCH EFFECT", "ZOOM TRANSITION"];
@@ -61,6 +310,24 @@ export default function App() {
   const [result, setResult] = useState<StoryboardResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [audio] = useState(() => {
+    const a = new Audio("https://assets.mixkit.co/music/preview/mixkit-cinematic-ambience-2234.mp3");
+    a.loop = true;
+    a.volume = 0.15;
+    return a;
+  });
+
+  useEffect(() => {
+    if (!isMuted) {
+      audio.play().catch(() => {
+        // User interaction required for first play
+        console.log("Interaction needed to play audio");
+      });
+    } else {
+      audio.pause();
+    }
+  }, [isMuted, audio]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -98,6 +365,14 @@ export default function App() {
     }
   };
 
+  // Auto-generate after 2 seconds on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleGenerate();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
@@ -116,84 +391,133 @@ export default function App() {
             Clashlore-Battle
           </div>
         </div>
-        <button 
-          disabled={isGenerating}
-          onClick={handleGenerate}
-          className="bg-[#f59e0b] hover:bg-[#d97706] disabled:opacity-50 text-black font-bold text-[12px] px-6 py-2 rounded shadow transition-all active:scale-[0.98] uppercase tracking-[1px] flex items-center gap-2"
-        >
-          {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
-          {isGenerating ? 'GENERATING...' : 'GENERATE STORYBOARD'}
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsMuted(!isMuted)}
+            className="text-[#64748b] hover:text-[#f59e0b] transition-colors p-2 rounded-full hover:bg-white/5"
+            title={isMuted ? "Unmute Music" : "Mute Music"}
+          >
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+          <button 
+            disabled={isGenerating}
+            onClick={handleGenerate}
+            className="bg-[#f59e0b] hover:bg-[#d97706] disabled:opacity-50 text-black font-bold text-[12px] px-6 py-2 rounded shadow transition-all active:scale-[0.98] uppercase tracking-[1px] flex items-center gap-2"
+          >
+            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+            {isGenerating ? 'GENERATING...' : 'GENERATE STORYBOARD'}
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-[300px] bg-[#0e0e11] border-r border-[#2d2d33] p-5 overflow-y-auto shrink-0 custom-scrollbar">
-          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Battle Intelligence</span>
+        <aside className="w-[350px] bg-[#0e0e11] border-r border-[#2d2d33] p-5 overflow-y-auto shrink-0 custom-scrollbar">
+          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Core Battle Data</span>
           
-          <div className="space-y-5 mb-8">
+          <div className="space-y-4 mb-8">
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Nama Karakter 1', value: data.f1Name, key: 'f1Name' },
-                { label: 'Nama Karakter 2', value: data.f2Name, key: 'f2Name' },
-              ].map(item => (
-                <div key={item.label}>
-                  <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">{item.label}</label>
-                  <input 
-                    value={item.value as string}
-                    onChange={e => setData({...data, [item.key]: e.target.value})}
-                    className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[11px] font-medium outline-none focus:border-[#f59e0b] focus:text-[#f59e0b] transition-all"
-                  />
-                </div>
-              ))}
-            </div>
-
-            {[
-              { label: 'Arena', value: data.arena, key: 'arena' },
-              { label: 'World Type', value: data.worldType, key: 'worldType' },
-              { label: 'Weather', value: data.weather, key: 'weather' },
-              { label: 'Lighting', value: data.lighting, key: 'lighting' },
-            ].map(item => (
-              <div key={item.label}>
-                <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">{item.label}</label>
+              <div>
+                <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Battle ID</label>
                 <input 
-                  value={item.value as string}
-                  onChange={e => setData({...data, [item.key]: e.target.value})}
-                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[11px] font-medium outline-none focus:border-[#f59e0b] focus:text-[#f59e0b] transition-all"
+                  value={data.battleId}
+                  onChange={e => setData({...data, battleId: e.target.value})}
+                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all"
                 />
               </div>
-            ))}
+              <div>
+                <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Result</label>
+                <input 
+                  value={data.battleResult}
+                  onChange={e => setData({...data, battleResult: e.target.value})}
+                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all"
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'F1 Weapon', value: data.f1Weapon, key: 'f1Weapon' },
-                { label: 'F2 Weapon', value: data.f2Weapon, key: 'f2Weapon' },
-                { label: 'F1 Ultimate', value: data.f1Ultimate, key: 'f1Ultimate' },
-                { label: 'F2 Ultimate', value: data.f2Ultimate, key: 'f2Ultimate' },
-              ].map(item => (
-                <div key={item.label}>
-                  <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">{item.label}</label>
-                  <input 
-                    value={item.value as string}
-                    onChange={e => setData({...data, [item.key]: e.target.value})}
-                    className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[11px] font-medium outline-none focus:border-[#f59e0b] focus:text-[#f59e0b] transition-all"
-                  />
-                </div>
-              ))}
+              <div>
+                <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Fighter 1</label>
+                <input 
+                  value={data.f1Name}
+                  onChange={e => setData({...data, f1Name: e.target.value})}
+                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Fighter 2</label>
+                <input 
+                  value={data.f2Name}
+                  onChange={e => setData({...data, f2Name: e.target.value})}
+                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Arena Name</label>
+              <input 
+                value={data.arena}
+                onChange={e => setData({...data, arena: e.target.value})}
+                className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="text-[9px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Outcome</label>
+              <textarea 
+                value={data.outcome}
+                onChange={e => setData({...data, outcome: e.target.value})}
+                rows={2}
+                className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[10px] font-medium outline-none focus:border-[#f59e0b] transition-all resize-none"
+              />
             </div>
           </div>
 
-          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Combat Logic</span>
-          <div className="space-y-5 mb-8">
-             <div>
-                <label className="text-[10px] text-[#94a3b8] block mb-1 uppercase tracking-wider">Battle Outcome</label>
-                <textarea 
-                  value={data.outcome}
-                  onChange={e => setData({...data, outcome: e.target.value})}
-                  rows={3}
-                  className="w-full bg-[#16161a] border border-[#2d2d33] rounded p-2 text-[#f8fafc] text-[11px] font-medium outline-none focus:border-[#f59e0b] focus:text-[#f59e0b] transition-all resize-none"
-                />
+          {[1, 2].map(fNum => (
+            <div key={fNum} className="mb-8 p-3 border border-white/5 rounded-lg bg-[#111114]">
+              <span className="text-[10px] text-[#f59e0b] uppercase tracking-[2px] mb-4 block font-black">Fighter {fNum} Profile</span>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <UIField label="Alias" field={`f${fNum}Alias` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Gender" field={`f${fNum}Gender` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Age Range" field={`f${fNum}AgeRange` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Height" field={`f${fNum}Height` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Body Type" field={`f${fNum}BodyType` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Power" field={`powerF${fNum}` as keyof BattleData} data={data} setData={setData} />
+                </div>
+                <UIField label="Personality" field={`f${fNum}Personality` as keyof BattleData} data={data} setData={setData} />
+                <UIField label="Backstory" field={`f${fNum}Backstory` as keyof BattleData} data={data} setData={setData} />
+                
+                <span className="text-[8px] text-[#64748b] uppercase font-bold pt-2 block border-t border-white/5">Combat Stats</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <UIField label="Role" field={`f${fNum}CombatRole` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Pattern" field={`f${fNum}CombatPattern` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Weapon" field={`f${fNum}PrimaryWeapon` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Ultimate" field={`f${fNum}UltimateAbility` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Weakness" field={`f${fNum}Weakness` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Style" field={`f${fNum}MovementStyle` as keyof BattleData} data={data} setData={setData} />
+                </div>
+                
+                <span className="text-[8px] text-[#64748b] uppercase font-bold pt-2 block border-t border-white/5">Cinematic Style</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <UIField label="Camera" field={`f${fNum}CameraStyle` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Impact" field={`f${fNum}ImpactStyle` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Pacing" field={`f${fNum}FightPacing` as keyof BattleData} data={data} setData={setData} />
+                  <UIField label="Finisher" field={`f${fNum}FinisherStyle` as keyof BattleData} data={data} setData={setData} />
+                </div>
               </div>
+            </div>
+          ))}
+
+          <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Environment & Atmosphere</span>
+          <div className="space-y-4 mb-8">
+             <div className="grid grid-cols-2 gap-2">
+                <UIField label="World Type" field="f1WorldType" data={data} setData={setData} />
+                <UIField label="Weather" field="f1Weather" data={data} setData={setData} />
+                <UIField label="Lighting" field="f1LightingSetup" data={data} setData={setData} />
+                <UIField label="Palette" field="f1ColorPalette" data={data} setData={setData} />
+             </div>
           </div>
 
           <span className="text-[10px] text-[#64748b] uppercase tracking-[2px] mb-4 block font-bold border-b border-[#2d2d33] pb-2">Director's Cut (Camera)</span>
@@ -313,19 +637,42 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 className="space-y-8 max-w-7xl mx-auto"
               >
-                {/* Character Arc Seeds */}
+                {/* Character Image Prompts */}
                 <div className="p-8 border border-[#f59e0b]/20 bg-[#16110a] rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 left-0 w-1 h-full bg-[#f59e0b]" />
                   <h3 className="text-[14px] font-black text-[#f59e0b] uppercase tracking-[2px] mb-6 flex items-center gap-2">
-                    <Terminal size={18} /> CHARACTER ARC SEEDS
+                    <Terminal size={18} /> CHARACTER IMAGE PROMPTS (VEO 9:16)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                    {result.arcSeeds.map((seed, idx) => (
-                      <div key={idx} className="flex gap-4">
-                        <span className="text-[#f59e0b] font-black text-sm">{idx + 1}.</span>
-                        <p className="text-[13px] text-[#cbd5e1] italic leading-relaxed">{seed}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">FIGHTER 1: {data.f1Name}</span>
+                        <button 
+                          onClick={() => copyToClipboard(result.f1ImagePrompt, 'f1Prompt')}
+                          className="text-[#64748b] hover:text-[#f59e0b] transition-colors p-1"
+                        >
+                          {copiedKey === 'f1Prompt' ? <Check size={14} className="text-[#10b981]" /> : <Copy size={14} />}
+                        </button>
                       </div>
-                    ))}
+                      <div className="bg-[#0a0a0b] p-4 rounded-lg border border-[#2d2d33] text-[12px] text-zinc-400 font-mono leading-relaxed">
+                        {result.f1ImagePrompt}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest">FIGHTER 2: {data.f2Name}</span>
+                        <button 
+                          onClick={() => copyToClipboard(result.f2ImagePrompt, 'f2Prompt')}
+                          className="text-[#64748b] hover:text-[#f59e0b] transition-colors p-1"
+                        >
+                          {copiedKey === 'f2Prompt' ? <Check size={14} className="text-[#10b981]" /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                      <div className="bg-[#0a0a0b] p-4 rounded-lg border border-[#2d2d33] text-[12px] text-zinc-400 font-mono leading-relaxed">
+                        {result.f2ImagePrompt}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -365,6 +712,19 @@ export default function App() {
           </div>
         </footer>
       )}
+    </div>
+  );
+}
+
+function UIField({ label, field, data, setData }: { label: string, field: keyof BattleData, data: BattleData, setData: (d: BattleData) => void }) {
+  return (
+    <div>
+      <label className="text-[8px] text-[#64748b] block mb-1 uppercase tracking-wider font-bold">{label}</label>
+      <input 
+        value={data[field] as string}
+        onChange={e => setData({...data, [field]: e.target.value})}
+        className="w-full bg-[#1e1e24] border border-[#2d2d33] rounded p-1.5 text-[#f8fafc] text-[10px] outline-none focus:border-[#f59e0b] transition-all"
+      />
     </div>
   );
 }
@@ -427,10 +787,13 @@ function SceneCard({
           <p className="text-[13px] text-zinc-400 italic">{scene.motion}</p>
         </div>
 
-        {/* Narasi Block */}
+        {/* Dialogue Block */}
         <div className="bg-[#0a0a0b] p-4 rounded border border-white/5 relative group min-h-[80px] flex items-center">
-          <div className="absolute top-4 left-4 text-[10px] text-red-500 font-extrabold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded">NARASI</div>
-          <p className="text-[14px] md:text-[15px] text-[#f8fafc] font-medium pl-20 italic">"{scene.narration}"</p>
+          <div className="absolute top-4 left-4 flex flex-col gap-1">
+            <div className="text-[10px] text-yellow-500 font-extrabold uppercase tracking-widest bg-yellow-500/10 px-2 py-0.5 rounded w-fit">DIALOGUE</div>
+            <div className="text-[9px] text-[#f59e0b] font-black uppercase tracking-tight">{scene.speaker}</div>
+          </div>
+          <p className="text-[14px] md:text-[15px] text-[#f8fafc] font-medium pl-32 italic">"{scene.dialogue}"</p>
         </div>
 
         {/* Footer info */}
