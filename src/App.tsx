@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Copy, 
   Check, 
   Terminal,
   Sparkles,
   Wand2,
-  Loader2
+  Loader2,
+  Clapperboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateStoryboard, StoryboardResult, StoryboardScene } from './services/geminiService.ts';
@@ -19,6 +20,8 @@ interface SceneDirective {
   cameraAngle: string;
   cameraMovement: string;
   transition: string;
+  motion: string;
+  description: string;
 }
 
 interface BattleData {
@@ -48,7 +51,7 @@ const DEFAULT_DATA: BattleData = {
   lighting: '',
   weather: '',
   worldType: '',
-  sceneDirectives: Array(8).fill(null).map(() => ({ cameraAngle: '', cameraMovement: '', transition: '' }))
+  sceneDirectives: Array(8).fill(null).map(() => ({ cameraAngle: '', cameraMovement: '', transition: '', motion: '', description: '' }))
 };
 
 const TRANSITIONS = ["HARD CUT", "WHIP PAN", "GLITCH EFFECT", "ZOOM TRANSITION"];
@@ -65,7 +68,7 @@ export default function App() {
     
     (Object.keys(DEFAULT_DATA) as Array<keyof BattleData>).forEach(key => {
       const val = params.get(key);
-      if (val) newData[key] = val;
+      if (val && key !== 'sceneDirectives') (newData as any)[key] = val;
     });
 
     // Backward compatibility for legacy keys
@@ -105,8 +108,13 @@ export default function App() {
     <div className="flex flex-col h-screen bg-[#0a0a0b] text-[#e2e8f0] font-sans overflow-hidden selection:bg-[#f59e0b] selection:text-black">
       {/* Header */}
       <header className="bg-[#111114] border-b border-[#2d2d33] px-6 py-3 flex justify-between items-center z-10 shrink-0">
-        <div className="text-[#f59e0b] font-extrabold tracking-[1px] text-sm uppercase">
-          VEO CINEMATIC STORYBOARD GEN // V2.0
+        <div className="flex items-center gap-3">
+          <div className="bg-[#ef4444] p-2 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/20">
+            <Clapperboard size={18} className="text-white" />
+          </div>
+          <div className="text-[#f59e0b] font-extrabold tracking-[1px] text-sm uppercase">
+            Clashlore-Battle
+          </div>
         </div>
         <button 
           disabled={isGenerating}
@@ -237,6 +245,33 @@ export default function App() {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <label className="text-[8px] text-[#64748b] uppercase block mb-1">Motion Choreography</label>
+                    <input 
+                      placeholder="e.g. F1 parries high, F2 counters with kick"
+                      value={directive.motion}
+                      onChange={e => {
+                        const newDirectives = [...data.sceneDirectives];
+                        newDirectives[idx].motion = e.target.value;
+                        setData({ ...data, sceneDirectives: newDirectives });
+                      }}
+                      className="w-full bg-[#0a0a0b] border border-[#2d2d33] rounded p-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#f59e0b] transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[8px] text-[#64748b] uppercase block mb-1">Detailed Description</label>
+                    <textarea 
+                      placeholder="Specific character actions, lighting mood, or environmental details..."
+                      value={directive.description}
+                      onChange={e => {
+                        const newDirectives = [...data.sceneDirectives];
+                        newDirectives[idx].description = e.target.value;
+                        setData({ ...data, sceneDirectives: newDirectives });
+                      }}
+                      rows={2}
+                      className="w-full bg-[#0a0a0b] border border-[#2d2d33] rounded p-1.5 text-[10px] text-zinc-300 outline-none focus:border-[#f59e0b] transition-all resize-none"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -334,17 +369,20 @@ export default function App() {
   );
 }
 
+interface SceneCardProps {
+  scene: StoryboardScene;
+  idx: number;
+  onCopy: (t: string, k: string) => void;
+  isCopied: boolean;
+  key?: React.Key;
+}
+
 function SceneCard({ 
   scene, 
   idx, 
   onCopy, 
   isCopied 
-}: { 
-  scene: StoryboardScene; 
-  idx: number; 
-  onCopy: (t: string, k: string) => void;
-  isCopied: boolean;
-}) {
+}: SceneCardProps) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}

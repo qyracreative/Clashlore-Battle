@@ -65,8 +65,13 @@ F1 Ultimate: ${data.f1Ultimate}
 F2 Ultimate: ${data.f2Ultimate}
 Outcome: ${data.outcome}
 
-Specific Director Camera Directives (Incorporate these if they are not empty):
-${data.sceneDirectives?.map((d: any, i: number) => `Scene ${i + 1}: Angle [${d.cameraAngle || 'AI Decide'}], Movement [${d.cameraMovement || 'AI Decide'}], Transition [${d.transition || 'AI Decide'}]`).join('\n')}
+Specific Director Directives (Incorporate these strictly):
+${data.sceneDirectives?.map((d: any, i: number) => `Scene ${i + 1}:
+- Angle: [${d.cameraAngle || 'AI Decide'}]
+- Movement: [${d.cameraMovement || 'AI Decide'}]
+- Transition: [${d.transition || 'AI Decide'}]
+- Motion/Choreography: [${d.motion || 'AI Decide'}]
+- Scene Description: [${d.description || 'AI Decide'}]`).join('\n\n')}
 
 Structure the response as JSON. Follow the requested 8-scene flow exactly.`;
 

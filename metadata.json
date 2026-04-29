@@ -1,6 +1,6 @@
 {
-  "name": "Veo Battle Storyboard Generator",
-  "description": "Generate 6-scene cinematic battle storyboard prompts for Google Veo from battle data.",
+  "name": "Clashlore-Battle",
+  "description": "Generate 8-scene cinematic battle storyboard prompts for Google Veo from battle data.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
