@@ -44,7 +44,7 @@ Flow of the 8 scenes:
 8. The winner stands triumphant, leaving the loser. Capture the final words and a unique celebration/exit that sets the tone for the aftermath.
 
 Field definitions:
-- Visual: Detailed scene description including character poses, environmental interaction, and lighting details.
+- Visual: Detailed scene description including character poses, environmental interaction, and lighting details. MANDATORY: You must explicitly mention key visual features of the fighters in every scene (outfit details, glowing eyes, specific weapon) to ensure visual consistency for image generation.
 - Camera: Specific camera angle or movement (e.g., Extreme close-up with shallow depth of field, Low angle tracking with motion blur, Handheld shake).
 - Motion: Specific choreography and physics-based movement.
 - Dialogue (Dialog): Exactly ONE powerful line of dialogue.
@@ -100,7 +100,11 @@ ${data.sceneDirectives?.map((d: any, i: number) => `Scene ${i + 1}:
 - Motion/Choreography: [${d.motion}]
 - Scene Description: [${d.description}]`).join('\n\n')}
 
-STRICT REQUIREMENT: Integrate all character details (visuals, weapons, personality) and stylistic directives (impact style, camera style) into the visual descriptions and narration for each scene.
+STRICT VISUAL CONSISTENCY REQUIREMENT: 
+1. Maintain exactly the same appearance for both fighters (outfit, hair, face, weapons) in every single scene.
+2. In the "visual" field of every scene, you MUST explicitly re-describe the character's clothing and weapon to maintain consistency for downstream image generation.
+3. Treat the character descriptions provided above as the "source of truth". The visual integrity of the fighters must be 100% consistent across all 8 scenes.
+4. Integrate all character details and stylistic directives (impact style, camera style) into the visual descriptions and narration for each scene.
 
 FOR CHARACTER IMAGE PROMPTS (f1ImagePrompt and f2ImagePrompt):
 Create a highly detailed, extremely high-quality prompt for generating a character portrait.
